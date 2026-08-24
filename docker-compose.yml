@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: downtime-postgres
+    environment:
+      POSTGRES_DB: downtime_app
+      POSTGRES_USER: noman
+      POSTGRES_PASSWORD: Getsuga
+    ports:
+      - "5432:5432"
+    volumes:
+      - downtime_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  downtime_postgres_data:
