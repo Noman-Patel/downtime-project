@@ -62,4 +62,20 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(response);
     }
+
+
+    @ExceptionHandler(DowntimeEventNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleDowntimeEventNotFound(
+            DowntimeEventNotFoundException exception) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("status", 404);
+        response.put("error", "Not Found");
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
 }
