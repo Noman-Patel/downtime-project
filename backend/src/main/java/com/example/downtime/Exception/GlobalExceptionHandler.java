@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
 
         String message = exception.getBindingResult()
                 .getFieldErrors()
-                .get(0)
+                .getFirst()
                 .getDefaultMessage();
 
         response.put("status", 400);
@@ -29,6 +29,21 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    @ExceptionHandler(ProductionLineNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleProductionLineNotFound(
+            ProductionLineNotFoundException exception) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("status", 404);
+        response.put("error", "Not Found");
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(response);
     }
 }
