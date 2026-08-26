@@ -46,4 +46,20 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(response);
     }
+
+
+
+    @ExceptionHandler(MachineNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleMachineNotFound(
+            MachineNotFoundException exception) {
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("status", 404);
+        response.put("error", "Not Found");
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
 }
