@@ -81,30 +81,37 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(DowntimeReasonNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleDowntimeReasonNotFound(
-            DowntimeReasonNotFoundException exception
-    ) {
-        Map<String, String> error = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> handleDowntimeReasonNotFound(
+            DowntimeReasonNotFoundException exception) {
 
-        error.put("error", exception.getMessage());
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("status", 404);
+        response.put("error", "Not Found");
+        response.put("message", exception.getMessage());
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(error);
+                .body(response);
     }
 
 
     @ExceptionHandler(DepartmentNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleDepartmentNotFound(
-            DepartmentNotFoundException exception
-    ) {
+    public ResponseEntity<Map<String, Object>> handleDepartmentNotFound(
+            DepartmentNotFoundException exception) {
 
-        Map<String, String> error = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
 
-        error.put("error", exception.getMessage());
+        response.put("status", 404);
+        response.put("error", "Not Found");
+        response.put("message", exception.getMessage());
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(error);
+                .body(response);
     }
+
+
+
 }
+

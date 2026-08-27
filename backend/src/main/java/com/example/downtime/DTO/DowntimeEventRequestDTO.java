@@ -2,44 +2,24 @@ package com.example.downtime.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 
 public class DowntimeEventRequestDTO {
 
     @NotNull(message = "Machine ID is required")
+    @Positive(message = "Machine ID must be greater than 0")
     private Long machineId;
-
     private Long downtimeReasonId;
 
     @NotBlank(message = "Fault reason is required")
     private String faultReason;
-
     private String description;
 
-    @NotNull(message = "Occurred at time is required")
+    @NotNull(message = "Occurred at is required")
     private LocalDateTime occurredAt;
-
     private LocalDateTime resolvedAt;
-
-    public DowntimeEventRequestDTO() {
-    }
-
-    public DowntimeEventRequestDTO(
-            Long machineId,
-            Long downtimeReasonId,
-            String faultReason,
-            String description,
-            LocalDateTime occurredAt,
-            LocalDateTime resolvedAt
-    ) {
-        this.machineId = machineId;
-        this.downtimeReasonId = downtimeReasonId;
-        this.faultReason = faultReason;
-        this.description = description;
-        this.occurredAt = occurredAt;
-        this.resolvedAt = resolvedAt;
-    }
 
     public Long getMachineId() {
         return machineId;
