@@ -11,8 +11,10 @@ import com.example.downtime.Exception.MachineNotFoundException;
 import com.example.downtime.Repository.DowntimeEventRepository;
 import com.example.downtime.Repository.DowntimeReasonRepository;
 import com.example.downtime.Repository.MachineRepository;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -32,23 +34,66 @@ public class DowntimeEventService {
         this.downtimeReasonRepository = downtimeReasonRepository;
     }
 
-    public List<DowntimeEvent> getAllDowntimeEvents() {
-        return downtimeEventRepository.findAll();
+
+
+    public List<DowntimeEvent> getDowntimeEvents(
+            Long machineId,
+            DowntimeStatus status,
+            LocalDateTime start,
+            LocalDateTime end) {
+
+        Specification<DowntimeEvent> specification =
+                (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
+
+        if (machineId != null) {
+            specification = specification.and(
+                    (root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(
+                                    root.get("machine").get("id"),
+                                    machineId
+                            )
+            );
+        }
+
+        if (status != null) {
+            specification = specification.and(
+                    (root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(
+                                    root.get("status"),
+                                    status
+                            )
+            );
+        }
+
+        if (start != null) {
+            specification = specification.and(
+                    (root, query, criteriaBuilder) ->
+                            criteriaBuilder.greaterThanOrEqualTo(
+                                    root.get("occurredAt"),
+                                    start
+                            )
+            );
+        }
+
+        if (end != null) {
+            specification = specification.and(
+                    (root, query, criteriaBuilder) ->
+                            criteriaBuilder.lessThanOrEqualTo(
+                                    root.get("occurredAt"),
+                                    end
+                            )
+            );
+        }
+
+        return downtimeEventRepository.findAll(specification);
     }
+
 
     public DowntimeEvent getDowntimeEventById(Long id) {
         return downtimeEventRepository.findById(id)
                 .orElseThrow(() -> new DowntimeEventNotFoundException(id));
     }
 
-    public List<DowntimeEvent> getDowntimeEventsByMachine(Long machineId) {
-
-        if (!machineRepository.existsById(machineId)) {
-            throw new MachineNotFoundException(machineId);
-        }
-
-        return downtimeEventRepository.findByMachineId(machineId);
-    }
 
     public DowntimeEvent createDowntimeEvent(
             DowntimeEventRequestDTO request

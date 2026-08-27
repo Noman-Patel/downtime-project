@@ -2,10 +2,12 @@ package com.example.downtime.Controller;
 
 import com.example.downtime.DTO.DowntimeEventRequestDTO;
 import com.example.downtime.Entities.DowntimeEvent;
+import com.example.downtime.Entities.DowntimeStatus;
 import com.example.downtime.Service.DowntimeEventService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -17,10 +19,19 @@ public class DowntimeEventController {
     public DowntimeEventController(DowntimeEventService downtimeEventService) {
         this.downtimeEventService = downtimeEventService;
     }
-
     @GetMapping
-    public List<DowntimeEvent> getAllDowntimeEvents() {
-        return downtimeEventService.getAllDowntimeEvents();
+    public List<DowntimeEvent> getDowntimeEvents(
+            @RequestParam(required = false) Long machineId,
+            @RequestParam(required = false) DowntimeStatus status,
+            @RequestParam(required = false) LocalDateTime start,
+            @RequestParam(required = false) LocalDateTime end) {
+
+        return downtimeEventService.getDowntimeEvents(
+                machineId,
+                status,
+                start,
+                end
+        );
     }
 
     @GetMapping("/{id}")
@@ -28,12 +39,8 @@ public class DowntimeEventController {
         return downtimeEventService.getDowntimeEventById(id);
     }
 
-    @GetMapping("/machine/{machineId}")
-    public List<DowntimeEvent> getDowntimeEventsByMachine(
-            @PathVariable Long machineId) {
 
-        return downtimeEventService.getDowntimeEventsByMachine(machineId);
-    }
+
 
     @PostMapping
     public DowntimeEvent createDowntimeEvent(
