@@ -92,4 +92,19 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(error);
     }
+
+
+    @ExceptionHandler(DepartmentNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleDepartmentNotFound(
+            DepartmentNotFoundException exception
+    ) {
+
+        Map<String, String> error = new HashMap<>();
+
+        error.put("error", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
 }

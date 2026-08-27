@@ -25,8 +25,9 @@ public class DowntimeEvent {
 
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private DowntimeStatus status;
 
     @Column(nullable = false)
     private LocalDateTime occurredAt;
@@ -41,4 +42,7 @@ public class DowntimeEvent {
     @ManyToOne
     @JoinColumn(name = "downtime_reason_id")
     private DowntimeReason downtimeReason;
+
+
+
 }

@@ -2,7 +2,11 @@ package com.example.downtime.Entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "production_lines")
 public class ProductionLine {
@@ -13,45 +17,14 @@ public class ProductionLine {
 
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
+
     @NotBlank(message = "Production line name is required")
     @Column(nullable = false)
     private String name;
 
     private String location;
 
-    public Long getId() {
-
-        return id;
-
-    }
-
-    public void setId(Long id) {
-
-        this.id = id;
-
-    }
-
-    public String getName() {
-
-        return name;
-
-    }
-
-    public void setName(String name) {
-
-        this.name = name;
-
-    }
-
-    public String getLocation() {
-
-        return location;
-
-    }
-
-    public void setLocation(String location) {
-
-        this.location = location;
-
-    }
 }

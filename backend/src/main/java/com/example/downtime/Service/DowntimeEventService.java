@@ -2,6 +2,7 @@ package com.example.downtime.Service;
 
 import com.example.downtime.Entities.DowntimeEvent;
 import com.example.downtime.Entities.DowntimeReason;
+import com.example.downtime.Entities.DowntimeStatus;
 import com.example.downtime.Entities.Machine;
 import com.example.downtime.Exception.DowntimeEventNotFoundException;
 import com.example.downtime.Exception.DowntimeReasonNotFoundException;
@@ -58,20 +59,21 @@ public class DowntimeEventService {
         downtimeEvent.setMachine(machine);
 
         if (downtimeEvent.getDowntimeReason() != null) {
-
             Long reasonId = downtimeEvent.getDowntimeReason().getId();
-
             DowntimeReason downtimeReason =
                     downtimeReasonRepository.findById(reasonId)
                             .orElseThrow(() ->
                                     new DowntimeReasonNotFoundException(reasonId)
                             );
-
             downtimeEvent.setDowntimeReason(downtimeReason);
         }
 
+        if (downtimeEvent.getResolvedAt() == null) {
+            downtimeEvent.setStatus(DowntimeStatus.OPEN);
+        } else {
+            downtimeEvent.setStatus(DowntimeStatus.RESOLVED);
+        }
         downtimeEvent.setId(null);
-
         return downtimeEventRepository.save(downtimeEvent);
     }
 
@@ -107,7 +109,11 @@ public class DowntimeEventService {
 
         existingEvent.setFaultReason(updatedEvent.getFaultReason());
         existingEvent.setDescription(updatedEvent.getDescription());
-        existingEvent.setStatus(updatedEvent.getStatus());
+        if (updatedEvent.getResolvedAt() == null) {
+            existingEvent.setStatus(DowntimeStatus.OPEN);
+        } else {
+            existingEvent.setStatus(DowntimeStatus.RESOLVED);
+        }
         existingEvent.setOccurredAt(updatedEvent.getOccurredAt());
         existingEvent.setResolvedAt(updatedEvent.getResolvedAt());
 
