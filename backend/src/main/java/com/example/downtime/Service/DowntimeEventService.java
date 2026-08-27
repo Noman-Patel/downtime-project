@@ -1,10 +1,13 @@
 package com.example.downtime.Service;
 
 import com.example.downtime.Entities.DowntimeEvent;
+import com.example.downtime.Entities.DowntimeReason;
 import com.example.downtime.Entities.Machine;
 import com.example.downtime.Exception.DowntimeEventNotFoundException;
+import com.example.downtime.Exception.DowntimeReasonNotFoundException;
 import com.example.downtime.Exception.MachineNotFoundException;
 import com.example.downtime.Repository.DowntimeEventRepository;
+import com.example.downtime.Repository.DowntimeReasonRepository;
 import com.example.downtime.Repository.MachineRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +18,16 @@ public class DowntimeEventService {
 
     private final DowntimeEventRepository downtimeEventRepository;
     private final MachineRepository machineRepository;
+    private final DowntimeReasonRepository downtimeReasonRepository;
 
     public DowntimeEventService(
             DowntimeEventRepository downtimeEventRepository,
-            MachineRepository machineRepository) {
-
+            MachineRepository machineRepository,
+            DowntimeReasonRepository downtimeReasonRepository
+    ) {
         this.downtimeEventRepository = downtimeEventRepository;
         this.machineRepository = machineRepository;
+        this.downtimeReasonRepository = downtimeReasonRepository;
     }
 
     public List<DowntimeEvent> getAllDowntimeEvents() {
@@ -51,39 +57,66 @@ public class DowntimeEventService {
 
         downtimeEvent.setMachine(machine);
 
+        if (downtimeEvent.getDowntimeReason() != null) {
+
+            Long reasonId = downtimeEvent.getDowntimeReason().getId();
+
+            DowntimeReason downtimeReason =
+                    downtimeReasonRepository.findById(reasonId)
+                            .orElseThrow(() ->
+                                    new DowntimeReasonNotFoundException(reasonId)
+                            );
+
+            downtimeEvent.setDowntimeReason(downtimeReason);
+        }
+
+        downtimeEvent.setId(null);
+
         return downtimeEventRepository.save(downtimeEvent);
     }
 
     public DowntimeEvent updateDowntimeEvent(
             Long id,
-            DowntimeEvent updatedDowntimeEvent) {
+            DowntimeEvent updatedEvent
+    ) {
 
-        DowntimeEvent existingEvent = downtimeEventRepository.findById(id)
-                .orElseThrow(() -> new DowntimeEventNotFoundException(id));
+        DowntimeEvent existingEvent = getDowntimeEventById(id);
 
-        existingEvent.setFaultReason(updatedDowntimeEvent.getFaultReason());
-        existingEvent.setDescription(updatedDowntimeEvent.getDescription());
-        existingEvent.setStatus(updatedDowntimeEvent.getStatus());
-        existingEvent.setOccurredAt(updatedDowntimeEvent.getOccurredAt());
-        existingEvent.setResolvedAt(updatedDowntimeEvent.getResolvedAt());
+        Long machineId = updatedEvent.getMachine().getId();
 
-        if (updatedDowntimeEvent.getMachine() != null) {
+        Machine machine = machineRepository.findById(machineId)
+                .orElseThrow(() -> new MachineNotFoundException(machineId));
 
-            Long machineId = updatedDowntimeEvent.getMachine().getId();
+        existingEvent.setMachine(machine);
 
-            Machine machine = machineRepository.findById(machineId)
-                    .orElseThrow(() -> new MachineNotFoundException(machineId));
+        if (updatedEvent.getDowntimeReason() != null) {
 
-            existingEvent.setMachine(machine);
+            Long reasonId = updatedEvent.getDowntimeReason().getId();
+
+            DowntimeReason downtimeReason =
+                    downtimeReasonRepository.findById(reasonId)
+                            .orElseThrow(() ->
+                                    new DowntimeReasonNotFoundException(reasonId)
+                            );
+
+            existingEvent.setDowntimeReason(downtimeReason);
+
+        } else {
+            existingEvent.setDowntimeReason(null);
         }
+
+        existingEvent.setFaultReason(updatedEvent.getFaultReason());
+        existingEvent.setDescription(updatedEvent.getDescription());
+        existingEvent.setStatus(updatedEvent.getStatus());
+        existingEvent.setOccurredAt(updatedEvent.getOccurredAt());
+        existingEvent.setResolvedAt(updatedEvent.getResolvedAt());
 
         return downtimeEventRepository.save(existingEvent);
     }
 
     public void deleteDowntimeEvent(Long id) {
 
-        DowntimeEvent downtimeEvent = downtimeEventRepository.findById(id)
-                .orElseThrow(() -> new DowntimeEventNotFoundException(id));
+        DowntimeEvent downtimeEvent = getDowntimeEventById(id);
 
         downtimeEventRepository.delete(downtimeEvent);
     }

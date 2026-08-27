@@ -36,4 +36,9 @@ public class DowntimeEvent {
     @ManyToOne
     @JoinColumn(name = "machine_id", nullable = false)
     private Machine machine;
+
+
+    @ManyToOne
+    @JoinColumn(name = "downtime_reason_id")
+    private DowntimeReason downtimeReason;
 }
