@@ -1,5 +1,6 @@
 package com.example.downtime.Controller;
 
+import com.example.downtime.DTO.DowntimeEventRequestDTO;
 import com.example.downtime.Entities.DowntimeEvent;
 import com.example.downtime.Service.DowntimeEventService;
 import jakarta.validation.Valid;
@@ -36,17 +37,17 @@ public class DowntimeEventController {
 
     @PostMapping
     public DowntimeEvent createDowntimeEvent(
-            @Valid @RequestBody DowntimeEvent downtimeEvent) {
+            @Valid @RequestBody DowntimeEventRequestDTO request) {
 
-        return downtimeEventService.createDowntimeEvent(downtimeEvent);
+        return downtimeEventService.createDowntimeEvent(request);
     }
 
     @PutMapping("/{id}")
     public DowntimeEvent updateDowntimeEvent(
             @PathVariable Long id,
-            @Valid @RequestBody DowntimeEvent downtimeEvent) {
+            @Valid @RequestBody DowntimeEventRequestDTO request) {
 
-        return downtimeEventService.updateDowntimeEvent(id, downtimeEvent);
+        return downtimeEventService.updateDowntimeEvent(id, request);
     }
 
     @DeleteMapping("/{id}")
