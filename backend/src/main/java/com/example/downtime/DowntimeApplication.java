@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DowntimeApplication {
+public class  DowntimeApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(DowntimeApplication.class, args);
