@@ -66,3 +66,7 @@ export type DowntimeByMachine = {
   machineName: string;
   downtimeEvents: number;
 };
+
+export type DepartmentPayload = Pick<Department, "name" | "description" | "location">;
+export type ProductionLinePayload = Pick<ProductionLine, "name" | "location" | "department">;
+export type DowntimeReasonPayload = Pick<DowntimeReason, "name" | "description" | "category" | "planned">;
