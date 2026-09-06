@@ -12,10 +12,12 @@ import com.example.downtime.Repository.DowntimeEventRepository;
 import com.example.downtime.Repository.DowntimeReasonRepository;
 import com.example.downtime.Repository.MachineRepository;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class DowntimeEventService {
@@ -37,7 +39,10 @@ public class DowntimeEventService {
 
 
     public List<DowntimeEvent> getDowntimeEvents(
+            String q,
             Long machineId,
+            Long downtimeReasonId,
+            Long productionLineId,
             DowntimeStatus status,
             LocalDateTime start,
             LocalDateTime end) {
@@ -45,12 +50,48 @@ public class DowntimeEventService {
         Specification<DowntimeEvent> specification =
                 (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
 
+        if (q != null && !q.isBlank()) {
+            String searchTerm = "%" + q.trim().toLowerCase(Locale.ROOT) + "%";
+            specification = specification.and(
+                    (root, query, criteriaBuilder) -> criteriaBuilder.or(
+                            criteriaBuilder.like(
+                                    criteriaBuilder.lower(root.get("faultReason")),
+                                    searchTerm
+                            ),
+                            criteriaBuilder.like(
+                                    criteriaBuilder.lower(root.get("description")),
+                                    searchTerm
+                            )
+                    )
+            );
+        }
+
         if (machineId != null) {
             specification = specification.and(
                     (root, query, criteriaBuilder) ->
                             criteriaBuilder.equal(
                                     root.get("machine").get("id"),
                                     machineId
+                            )
+            );
+        }
+
+        if (downtimeReasonId != null) {
+            specification = specification.and(
+                    (root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(
+                                    root.get("downtimeReason").get("id"),
+                                    downtimeReasonId
+                            )
+            );
+        }
+
+        if (productionLineId != null) {
+            specification = specification.and(
+                    (root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(
+                                    root.get("machine").get("productionLine").get("id"),
+                                    productionLineId
                             )
             );
         }
@@ -85,7 +126,11 @@ public class DowntimeEventService {
             );
         }
 
-        return downtimeEventRepository.findAll(specification);
+        return downtimeEventRepository.findAll(
+                specification,
+                Sort.by(Sort.Direction.DESC, "occurredAt")
+                        .and(Sort.by(Sort.Direction.DESC, "id"))
+        );
     }
 
 

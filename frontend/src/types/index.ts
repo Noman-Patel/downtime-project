@@ -21,15 +21,6 @@ export type Machine = {
   productionLine: ProductionLine;
 };
 
-export type DowntimeReason = {
-  id: number;
-  name: string;
-  description?: string | null;
-  category?: string | null;
-  planned: boolean;
-  createdAt?: string;
-};
-
 export type DowntimeStatus = "OPEN" | "RESOLVED";
 
 export type DowntimeEvent = {
@@ -40,12 +31,10 @@ export type DowntimeEvent = {
   occurredAt: string;
   resolvedAt?: string | null;
   machine: Machine;
-  downtimeReason?: DowntimeReason | null;
 };
 
 export type DowntimeEventPayload = {
   machineId: number;
-  downtimeReasonId?: number | null;
   faultReason: string;
   description?: string;
   occurredAt: string;
@@ -60,7 +49,6 @@ export type DashboardSummary = {
   totalDowntimeMinutes: number;
 };
 
-export type DowntimeByReason = { reason: string; count: number };
 export type DowntimeByMachine = {
   machineId: number;
   machineName: string;
@@ -69,4 +57,3 @@ export type DowntimeByMachine = {
 
 export type DepartmentPayload = Pick<Department, "name" | "description" | "location">;
 export type ProductionLinePayload = Pick<ProductionLine, "name" | "location" | "department">;
-export type DowntimeReasonPayload = Pick<DowntimeReason, "name" | "description" | "category" | "planned">;

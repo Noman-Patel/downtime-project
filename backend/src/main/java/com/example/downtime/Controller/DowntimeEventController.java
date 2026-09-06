@@ -21,13 +21,19 @@ public class DowntimeEventController {
     }
     @GetMapping
     public List<DowntimeEvent> getDowntimeEvents(
+            @RequestParam(required = false) String q,
             @RequestParam(required = false) Long machineId,
+            @RequestParam(required = false) Long downtimeReasonId,
+            @RequestParam(required = false) Long productionLineId,
             @RequestParam(required = false) DowntimeStatus status,
             @RequestParam(required = false) LocalDateTime start,
             @RequestParam(required = false) LocalDateTime end) {
 
         return downtimeEventService.getDowntimeEvents(
+                q,
                 machineId,
+                downtimeReasonId,
+                productionLineId,
                 status,
                 start,
                 end
