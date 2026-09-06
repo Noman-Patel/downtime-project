@@ -7,6 +7,7 @@ import com.example.downtime.Entities.DowntimeStatus;
 import com.example.downtime.Entities.Machine;
 import com.example.downtime.Exception.DowntimeEventNotFoundException;
 import com.example.downtime.Exception.DowntimeReasonNotFoundException;
+import com.example.downtime.Exception.InvalidDowntimeDateRangeException;
 import com.example.downtime.Exception.MachineNotFoundException;
 import com.example.downtime.Repository.DowntimeEventRepository;
 import com.example.downtime.Repository.DowntimeReasonRepository;
@@ -46,6 +47,8 @@ public class DowntimeEventService {
             DowntimeStatus status,
             LocalDateTime start,
             LocalDateTime end) {
+
+        validateFilterDateRange(start, end);
 
         Specification<DowntimeEvent> specification =
                 (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
@@ -144,6 +147,8 @@ public class DowntimeEventService {
             DowntimeEventRequestDTO request
     ) {
 
+        validateEventDateRange(request.getOccurredAt(), request.getResolvedAt());
+
         Machine machine = machineRepository.findById(request.getMachineId())
                 .orElseThrow(() ->
                         new MachineNotFoundException(request.getMachineId())
@@ -183,6 +188,8 @@ public class DowntimeEventService {
             Long id,
             DowntimeEventRequestDTO request
     ) {
+
+        validateEventDateRange(request.getOccurredAt(), request.getResolvedAt());
 
         DowntimeEvent existingEvent = getDowntimeEventById(id);
 
@@ -229,5 +236,29 @@ public class DowntimeEventService {
         DowntimeEvent downtimeEvent = getDowntimeEventById(id);
 
         downtimeEventRepository.delete(downtimeEvent);
+    }
+
+    private void validateEventDateRange(
+            LocalDateTime occurredAt,
+            LocalDateTime resolvedAt
+    ) {
+        if (occurredAt != null
+                && resolvedAt != null
+                && resolvedAt.isBefore(occurredAt)) {
+            throw new InvalidDowntimeDateRangeException(
+                    "Resolved at cannot be earlier than occurred at"
+            );
+        }
+    }
+
+    private void validateFilterDateRange(
+            LocalDateTime start,
+            LocalDateTime end
+    ) {
+        if (start != null && end != null && start.isAfter(end)) {
+            throw new InvalidDowntimeDateRangeException(
+                    "Start date cannot be after end date"
+            );
+        }
     }
 }

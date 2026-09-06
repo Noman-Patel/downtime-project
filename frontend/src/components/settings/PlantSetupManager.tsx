@@ -65,7 +65,7 @@ export function PlantSetupManager() {
     setEditor({ kind: "line", item });
   };
 
-  const save = async (event: React.FormEvent) => {
+  const save = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editor) return;
     setSaving(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createDowntimeEvent,
   deleteDowntimeEvent,
@@ -61,7 +61,7 @@ const formatDuration = (event: DowntimeEvent) => {
   return `${parts.join(" ")}${event.status === "OPEN" ? " ongoing" : ""}`;
 };
 
-export function DowntimeManager() {
+export function DowntimeManager({ initialMachineId, startNewEvent = false }: { initialMachineId?: number; startNewEvent?: boolean }) {
   const [events, setEvents] = useState<DowntimeEvent[]>([]);
   const [machines, setMachines] = useState<Machine[]>([]);
   const [productionLines, setProductionLines] = useState<ProductionLine[]>([]);
@@ -72,6 +72,7 @@ export function DowntimeManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const appliedInitialAction = useRef(false);
 
   const load = useCallback(async (next: DowntimeFilters) => {
     setLoading(true);
@@ -94,13 +95,25 @@ export function DowntimeManager() {
       .then(([machineOptions, lineOptions]) => {
         setMachines(machineOptions);
         setProductionLines(lineOptions);
+        if (
+          startNewEvent &&
+          initialMachineId &&
+          machineOptions.some((machine) => machine.id === initialMachineId) &&
+          !appliedInitialAction.current
+        ) {
+          setEditing(null);
+          setForm({ ...emptyForm(), machineId: String(initialMachineId) });
+          setOpen(true);
+          appliedInitialAction.current = true;
+        }
       })
       .catch(() => setError("Could not load search and form options"));
 
     void load({});
-  }, [load]);
+  }, [initialMachineId, load, startNewEvent]);
 
   const begin = (event?: DowntimeEvent) => {
+    setError("");
     setEditing(event ?? null);
     setForm(
       event
@@ -117,8 +130,16 @@ export function DowntimeManager() {
     setOpen(true);
   };
 
-  const save = async (event: React.FormEvent) => {
+  const save = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (
+      form.status === "RESOLVED" &&
+      form.resolvedAt &&
+      new Date(form.resolvedAt).getTime() < new Date(form.occurredAt).getTime()
+    ) {
+      setError("Resolved at cannot be earlier than occurred at");
+      return;
+    }
     setSaving(true);
     setError("");
 
@@ -195,6 +216,14 @@ export function DowntimeManager() {
       <form
         onSubmit={(event) => {
           event.preventDefault();
+          if (
+            filters.start &&
+            filters.end &&
+            new Date(filters.start).getTime() > new Date(filters.end).getTime()
+          ) {
+            setError("Start date cannot be after end date");
+            return;
+          }
           void load(filters);
         }}
         className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
@@ -454,6 +483,12 @@ export function DowntimeManager() {
                 ×
               </button>
             </div>
+
+            {error && (
+              <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                {error}
+              </p>
+            )}
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-medium sm:col-span-2">

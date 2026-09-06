@@ -3,6 +3,7 @@ import type { Department, DepartmentPayload, Machine, ProductionLine, Production
 
 export const resourceService = {
   machines: () => apiRequest<Machine[]>("/api/machines", { cache: "no-store" }),
+  machine: (id: number) => apiRequest<Machine>(`/api/machines/${id}`, { cache: "no-store" }),
   productionLines: () => apiRequest<ProductionLine[]>("/api/production-lines", { cache: "no-store" }),
   departments: () => apiRequest<Department[]>("/api/departments", { cache: "no-store" }),
   createMachine: (body: Omit<Machine, "id">) => apiRequest<Machine>("/api/machines", { method: "POST", body: JSON.stringify(body) }),
