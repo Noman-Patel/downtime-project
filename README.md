@@ -15,6 +15,9 @@ The application models a manufacturing facility from departments down to individ
 - **Combined filters** for machine, production line, status, and occurrence date range.
 - **Automatic status handling**: an event without a resolution time is `OPEN`; an event with one is `RESOLVED`.
 - **Validation and useful API errors** for missing fields, invalid date ranges, unknown records, and delete conflicts.
+- **Session-based authentication** with database-backed users, BCrypt password hashes, CSRF protection, session-expiry handling, and JSON `401`/`403` responses.
+- **Role-based access control** for administrators and technicians, including role-aware navigation and controls enforced again by the backend.
+- **Administrator user management** for creating accounts, assigning roles, resetting passwords, enabling or disabling access, and protecting the final administrator account.
 - **Responsive interface** with desktop and mobile navigation, loading states, empty states, and backend-offline feedback.
 
 ## Why this project exists
@@ -28,11 +31,11 @@ The goal is a maintenance knowledge base that becomes more useful as the facilit
 ```text
 Browser
    |
-   | Next.js pages and /api proxy
+   | Next.js pages, session cookie, CSRF header, and /api proxy
    v
 Next.js frontend (port 3000)
    |
-   | REST/JSON
+   | Authenticated REST/JSON
    v
 Spring Boot API (port 8080)
    |
@@ -41,7 +44,7 @@ Spring Boot API (port 8080)
 PostgreSQL (port 5432, Docker)
 ```
 
-Browser-side requests use relative `/api/...` URLs. The rewrite in `frontend/next.config.ts` forwards them to Spring Boot, avoiding a browser cross-origin request. Server-rendered dashboard requests use `NEXT_PUBLIC_API_URL` directly.
+Browser-side requests use relative `/api/...` URLs. The rewrite in `frontend/next.config.ts` forwards them to Spring Boot, avoiding a browser cross-origin request. The current dashboard loads on the client after the authenticated session has been checked, so its requests include the same session credentials as the rest of the interface.
 
 ### Domain model
 
@@ -61,7 +64,7 @@ The backend retains an optional legacy `DowntimeReason` relationship and REST re
 | Layer | Technologies |
 | --- | --- |
 | Frontend | Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4 |
-| Backend | Java 21, Spring Boot 4, Spring Web MVC, Spring Data JPA, Bean Validation |
+| Backend | Java 21, Spring Boot 4, Spring Security, Spring Web MVC, Spring Data JPA, Bean Validation |
 | Database | PostgreSQL 16 |
 | Local infrastructure | Docker Compose |
 | Tests | JUnit 5, Mockito, Spring test utilities |
@@ -122,6 +125,27 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 
 After changing `NEXT_PUBLIC_API_URL` or `next.config.ts`, restart the frontend server so the rewrite is reloaded.
 
+### 4. Sign in
+
+For local development, the backend creates these starter accounts when the `app_users` table is empty:
+
+| Role | Username | Password |
+| --- | --- | --- |
+| Administrator | `admin` | `Admin123!` |
+| Technician | `technician` | `Tech123!` |
+
+> These credentials are for local development and portfolio demonstrations only. Change both passwords before sharing an environment. The starter-account initializer is disabled when the `prod` Spring profile is active.
+
+The local passwords and initializer can be controlled without editing source code:
+
+```bash
+BOOTSTRAP_ADMIN_PASSWORD='choose-a-new-admin-password' \
+BOOTSTRAP_TECHNICIAN_PASSWORD='choose-a-new-technician-password' \
+./mvnw spring-boot:run
+```
+
+Set `BOOTSTRAP_USERS_ENABLED=false` to prevent starter accounts from being created. Once any application user exists, the initializer leaves all user records unchanged.
+
 ### Stop local services
 
 Stop the frontend and backend with `Ctrl+C`, then stop PostgreSQL from the repository root:
@@ -141,7 +165,23 @@ cd backend
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
-The initializer runs only when the core application tables are empty. It leaves existing application data unchanged, so use an empty local database when you want the full sample dataset.
+The initializer runs only when the core application tables are empty. It leaves existing application data unchanged, so use an empty local database when you want the full sample dataset. User accounts are initialized separately, which means an existing plant database can gain its first local administrator without altering plant or downtime records.
+
+To keep your regular `downtime_app` records separate, create a dedicated demo database once:
+
+```bash
+docker exec downtime-postgres createdb -U noman downtime_demo
+```
+
+Then start the demo backend against it:
+
+```bash
+cd backend
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/downtime_demo \
+./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+```
+
+If `downtime_demo` already exists, skip the `createdb` command. The frontend continues to use port `8080`, so no frontend configuration change is required.
 
 With the backend running in the demo profile, start the frontend normally and explore this workflow:
 
@@ -150,9 +190,43 @@ With the backend running in the demo profile, start the frontend normally and ex
 3. Open a machine from the registry to review its individual fault history.
 4. Log an open fault, then edit it and supply a resolution time to mark it resolved.
 
+## Authentication and roles
+
+The application uses a database-backed Spring Security session. The browser receives an HTTP-only `JSESSIONID` cookie after login. State-changing requests also require a CSRF token; the shared frontend API client obtains and sends that token automatically.
+
+| Capability | Technician | Administrator |
+| --- | :---: | :---: |
+| View dashboard, machines, and fault history | Yes | Yes |
+| Search, create, edit, resolve, and reopen downtime events | Yes | Yes |
+| Delete downtime history | No | Yes |
+| Create, edit, or delete machines | No | Yes |
+| Manage departments and production lines | No | Yes |
+| Create, edit, disable, or delete users | No | Yes |
+
+The frontend hides controls that are unavailable to the current role, while the backend independently enforces every permission. Direct navigation to `/settings` or `/users` as a technician displays an access-denied page, and direct API calls return `403 Forbidden`.
+
+Administrator safeguards prevent a signed-in user from deleting, disabling, or changing the role of their own account. The final enabled administrator also cannot be disabled, demoted, or deleted.
+
 ## REST API
 
 The API base URL is `http://localhost:8080/api` during local development.
+
+All endpoints require authentication except the CSRF-token and login endpoints.
+
+### Authentication and users
+
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/auth/csrf` | Public | Issue the CSRF cookie and return its token/header contract |
+| `POST` | `/api/auth/login` | Public | Authenticate a username and password and create a session |
+| `GET` | `/api/auth/me` | Signed-in user | Return the current sanitized user profile |
+| `POST` | `/api/auth/logout` | Signed-in user | Invalidate the current session |
+| `GET` | `/api/users` | Administrator | List application users |
+| `POST` | `/api/users` | Administrator | Create an administrator or technician |
+| `PUT` | `/api/users/{id}` | Administrator | Update display name, role, enabled status, or password |
+| `DELETE` | `/api/users/{id}` | Administrator | Delete an account when administrator safeguards allow it |
+
+API clients that do not use the frontend proxy must first call `/api/auth/csrf`, retain the returned `XSRF-TOKEN` cookie, and send the returned token using the `X-XSRF-TOKEN` header with every `POST`, `PUT`, `PATCH`, or `DELETE` request.
 
 ### Dashboard
 
@@ -241,6 +315,8 @@ Handled API errors use a consistent JSON shape:
 ```
 
 - `400 Bad Request` covers request validation, invalid enum/ID formats, and invalid time ranges.
+- `401 Unauthorized` indicates that a valid signed-in session is required.
+- `403 Forbidden` indicates a missing CSRF token or an action outside the current user's role.
 - `404 Not Found` covers missing departments, lines, machines, downtime events, and legacy reasons.
 - `409 Conflict` protects records that are still referenced by other data.
 
@@ -278,17 +354,17 @@ Preview a completed frontend build with `npm run start` while the backend is run
 downtime-project/
 ├── backend/
 │   ├── src/main/java/com/example/downtime/
-│   │   ├── Config/           demo-profile sample-data initializer
+│   │   ├── Config/           security, CORS, CSRF, and local/demo initializers
 │   │   ├── Controller/       REST endpoints
-│   │   ├── DTO/              API request and dashboard response models
-│   │   ├── Entities/         JPA domain entities
+│   │   ├── DTO/              API request, user, and dashboard response models
+│   │   ├── Entities/         JPA domain and application-user entities
 │   │   ├── Exception/        Consistent HTTP error handling
 │   │   ├── Repository/       Spring Data repositories
 │   │   └── Service/          Business logic, validation, and search
 │   └── src/test/             Backend tests
 ├── frontend/
 │   ├── src/app/              App Router pages and global layout
-│   ├── src/components/       Dashboard, downtime, machine, setup, and layout UI
+│   ├── src/components/       Auth, dashboard, downtime, machine, setup, user, and layout UI
 │   ├── src/lib/              Shared API client
 │   ├── src/services/         Typed backend service functions
 │   └── src/types/            Shared frontend domain types
@@ -303,6 +379,6 @@ The current application is a functional portfolio MVP. Logical next improvements
 - Add pagination for large fault histories and server-side dashboard aggregation.
 - Preserve audit history with archival or soft deletion instead of deleting downtime events.
 - Move database credentials to environment variables before publishing or deploying.
-- Add authentication and role-based permissions for administrators and technicians.
+- Add audit attribution so fault records show who created and last updated them.
 - Add production containers, continuous integration, deployment configuration, and monitoring.
 - Add repository screenshots after the final visual review.

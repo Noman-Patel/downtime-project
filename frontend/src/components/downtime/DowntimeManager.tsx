@@ -9,6 +9,7 @@ import {
   type DowntimeFilters,
 } from "@/services/downtimeService";
 import { resourceService } from "@/services/resourceService";
+import { useAuth } from "@/components/auth/AuthProvider";
 import type {
   DowntimeEvent,
   DowntimeEventPayload,
@@ -62,6 +63,8 @@ const formatDuration = (event: DowntimeEvent) => {
 };
 
 export function DowntimeManager({ initialMachineId, startNewEvent = false }: { initialMachineId?: number; startNewEvent?: boolean }) {
+  const { user } = useAuth();
+  const canDelete = user?.role === "ADMIN";
   const [events, setEvents] = useState<DowntimeEvent[]>([]);
   const [machines, setMachines] = useState<Machine[]>([]);
   const [productionLines, setProductionLines] = useState<ProductionLine[]>([]);
@@ -95,14 +98,14 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
       .then(([machineOptions, lineOptions]) => {
         setMachines(machineOptions);
         setProductionLines(lineOptions);
-        if (
-          startNewEvent &&
-          initialMachineId &&
-          machineOptions.some((machine) => machine.id === initialMachineId) &&
-          !appliedInitialAction.current
-        ) {
+        if (startNewEvent && !appliedInitialAction.current) {
+          const selectedMachineId =
+            initialMachineId &&
+            machineOptions.some((machine) => machine.id === initialMachineId)
+              ? String(initialMachineId)
+              : "";
           setEditing(null);
-          setForm({ ...emptyForm(), machineId: String(initialMachineId) });
+          setForm({ ...emptyForm(), machineId: selectedMachineId });
           setOpen(true);
           appliedInitialAction.current = true;
         }
@@ -170,6 +173,7 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
   };
 
   const remove = async (event: DowntimeEvent) => {
+    if (!canDelete) return;
     if (!confirm(`Delete “${event.faultReason}”?`)) return;
 
     setError("");
@@ -429,12 +433,14 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
                     >
                       Edit
                     </button>
-                    <button
-                      onClick={() => void remove(event)}
-                      className="font-semibold text-rose-600 hover:text-rose-800"
-                    >
-                      Delete
-                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={() => void remove(event)}
+                        className="font-semibold text-rose-600 hover:text-rose-800"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

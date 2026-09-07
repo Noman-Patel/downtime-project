@@ -23,6 +23,34 @@ export type Machine = {
 
 export type DowntimeStatus = "OPEN" | "RESOLVED";
 
+export type UserRole = "ADMIN" | "TECHNICIAN";
+
+export type CurrentUser = {
+  id: number;
+  username: string;
+  displayName: string;
+  role: UserRole;
+  enabled: boolean;
+};
+
+export type AppUser = CurrentUser & {
+  createdAt: string;
+};
+
+export type CreateUserPayload = {
+  username: string;
+  displayName: string;
+  password: string;
+  role: UserRole;
+};
+
+export type UpdateUserPayload = {
+  displayName: string;
+  role: UserRole;
+  enabled: boolean;
+  password?: string;
+};
+
 export type DowntimeEvent = {
   id: number;
   faultReason: string;

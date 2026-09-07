@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -32,6 +33,33 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleInvalidDowntimeDateRange(
             InvalidDowntimeDateRangeException exception) {
         return errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticationException(
+            AuthenticationException exception) {
+        return errorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid username or password"
+        );
+    }
+
+    @ExceptionHandler(UserOperationNotAllowedException.class)
+    public ResponseEntity<Map<String, Object>> handleUserOperationNotAllowed(
+            UserOperationNotAllowedException exception) {
+        return errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleUsernameAlreadyExists(
+            UsernameAlreadyExistsException exception) {
+        return errorResponse(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFound(
+            UserNotFoundException exception) {
+        return errorResponse(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
