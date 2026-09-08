@@ -51,95 +51,126 @@ export default function Home() {
       !current || machine.downtimeEvents > current.downtimeEvents ? machine : current,
     undefined,
   );
-  const cards = [
-    ["Total events", summary.totalDowntimeEvents, "All recorded incidents", "bg-slate-900 text-white"],
-    ["Open events", summary.openDowntimeEvents, "Needs attention", "bg-amber-50 text-amber-900"],
-    ["Resolved", summary.resolvedDowntimeEvents, "Closed incidents", "bg-emerald-50 text-emerald-900"],
-    ["Downtime", summary.totalDowntimeMinutes, "Total resolved minutes", "bg-cyan-50 text-cyan-900"],
+
+  const metrics = [
+    {
+      label: "Total events",
+      value: summary.totalDowntimeEvents,
+      note: "All recorded",
+    },
+    {
+      label: "Open",
+      value: summary.openDowntimeEvents,
+      note: "Need attention",
+      warning: summary.openDowntimeEvents > 0,
+    },
+    {
+      label: "Resolved",
+      value: summary.resolvedDowntimeEvents,
+      note: "Closed events",
+    },
+    {
+      label: "Downtime",
+      value: summary.totalDowntimeMinutes,
+      note: "Resolved minutes",
+      suffix: " min",
+    },
   ];
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-700">Plant overview</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Operations dashboard</h1>
-          <p className="mt-2 text-sm text-slate-500">A live view of equipment health and downtime performance.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Overview</h1>
+          <p className="mt-1.5 text-sm text-slate-500">
+            Current downtime activity across the plant.
+          </p>
         </div>
         <Link
           href="/downtime?new=1"
-          className="rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+          className="rounded-md bg-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-blue-700"
         >
-          Log downtime event
+          Record downtime
         </Link>
       </div>
 
       {offline && (
-        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          Live metrics could not be loaded. Confirm that the API is running and try refreshing the page.
+        <div className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Live data could not be loaded. Check that the backend is running, then refresh this page.
         </div>
       )}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map(([label, value, helper, tone]) => (
-          <div key={label as string} className={`rounded-2xl border border-black/5 p-6 shadow-sm ${tone}`}>
-            <p className="text-sm opacity-70">{label}</p>
-            <p className={`mt-3 text-4xl font-bold tracking-tight ${loading ? "animate-pulse opacity-30" : ""}`}>
-              {loading ? "—" : value}
+      <section className="mt-7 grid overflow-hidden rounded-lg border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+        {metrics.map((metric, index) => (
+          <div
+            key={metric.label}
+            className={`px-5 py-5 ${
+              index > 0 ? "border-t border-slate-200 sm:border-l lg:border-t-0" : ""
+            } ${index === 2 ? "sm:border-l-0 lg:border-l" : ""}`}
+          >
+            <p className="text-sm text-slate-500">{metric.label}</p>
+            <p
+              className={`mt-2 text-3xl font-semibold tabular-nums tracking-tight ${
+                metric.warning ? "text-amber-700" : "text-slate-950"
+              } ${loading ? "animate-pulse text-slate-300" : ""}`}
+            >
+              {loading ? "—" : `${metric.value}${metric.suffix ?? ""}`}
             </p>
-            <p className="mt-3 text-xs opacity-60">{helper}</p>
+            <p className="mt-1.5 text-xs text-slate-400">{metric.note}</p>
           </div>
         ))}
-      </div>
+      </section>
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
         <AnalyticsCard
-          title="Downtime by machine"
+          title="Events by machine"
           rows={machines.map((machine) => ({
             label: machine.machineName,
             value: machine.downtimeEvents,
           }))}
           valueKey="events"
         />
-        <section className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[.16em] text-cyan-700">Machine activity</p>
-            <h2 className="mt-3 text-xl font-bold text-slate-900">Maintenance focus</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              See which assets are generating the most downtime events and prioritize follow-up work.
-            </p>
-            <div className="mt-6 rounded-xl bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Most recorded events</p>
-              <p className="mt-2 font-bold text-slate-900">
-                {loading ? "Loading…" : mostActiveMachine?.machineName || "No machine data yet"}
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                {mostActiveMachine
-                  ? `${mostActiveMachine.downtimeEvents} events`
-                  : "Log an event to begin tracking activity."}
-              </p>
-            </div>
+
+        <section className="rounded-lg border border-slate-200 bg-white">
+          <div className="border-b border-slate-200 px-5 py-4">
+            <h2 className="font-semibold text-slate-900">Plant summary</h2>
           </div>
-          <Link
-            href="/machines"
-            className="mt-6 inline-flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
-          >
-            Review all machines <span aria-hidden="true">→</span>
-          </Link>
+          <dl className="divide-y divide-slate-100 px-5">
+            <div className="flex items-center justify-between gap-4 py-4">
+              <dt className="text-sm text-slate-500">Registered machines</dt>
+              <dd className="font-medium tabular-nums text-slate-900">
+                {loading ? "—" : summary.totalMachines}
+              </dd>
+            </div>
+            <div className="py-4">
+              <dt className="text-sm text-slate-500">Most recorded events</dt>
+              <dd className="mt-1 font-medium text-slate-900">
+                {loading ? "Loading…" : mostActiveMachine?.machineName || "No event data"}
+              </dd>
+              {mostActiveMachine && (
+                <p className="mt-1 text-xs text-slate-400">
+                  {mostActiveMachine.downtimeEvents} events
+                </p>
+              )}
+            </div>
+            <div className="py-4">
+              <dt className="text-sm text-slate-500">Open work</dt>
+              <dd className="mt-1 text-sm text-slate-700">
+                {loading
+                  ? "Loading…"
+                  : summary.openDowntimeEvents
+                    ? `${summary.openDowntimeEvents} events still need attention`
+                    : "No open downtime events"}
+              </dd>
+            </div>
+          </dl>
+          <div className="border-t border-slate-200 px-5 py-4">
+            <Link href="/machines" className="text-sm font-medium text-blue-700 hover:text-blue-900">
+              View machine registry →
+            </Link>
+          </div>
         </section>
       </div>
-
-      <section className="mt-8 rounded-2xl bg-slate-950 p-6 text-white md:flex md:items-center md:justify-between">
-        <div>
-          <p className="text-sm text-slate-400">Asset coverage</p>
-          <p className="mt-2 text-2xl font-bold">
-            {loading ? "Loading machine coverage…" : `${summary.totalMachines} machines connected`}
-          </p>
-        </div>
-        <Link href="/machines" className="mt-5 inline-block text-sm font-semibold text-cyan-400 md:mt-0">
-          Review machine registry →
-        </Link>
-      </section>
     </div>
   );
 }

@@ -62,6 +62,9 @@ const formatDuration = (event: DowntimeEvent) => {
   return `${parts.join(" ")}${event.status === "OPEN" ? " ongoing" : ""}`;
 };
 
+const fieldClass =
+  "mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+
 export function DowntimeManager({ initialMachineId, startNewEvent = false }: { initialMachineId?: number; startNewEvent?: boolean }) {
   const { user } = useAuth();
   const canDelete = user?.role === "ADMIN";
@@ -198,22 +201,20 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
   }`;
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-700">
-            Maintenance knowledge base
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">Downtime events</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Search previous faults, review repair context, and manage production interruptions.
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Downtime</h1>
+          <p className="mt-1.5 text-sm text-slate-500">
+            Record production interruptions and review previous faults.
           </p>
         </div>
         <button
+          type="button"
           onClick={() => begin()}
-          className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+          className="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
         >
-          + New event
+          New event
         </button>
       </div>
 
@@ -230,15 +231,12 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
           }
           void load(filters);
         }}
-        className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        className="mt-7 overflow-hidden rounded-lg border border-slate-200 bg-white"
       >
-        <div className="border-b border-slate-100 bg-slate-50/70 p-4 sm:p-5">
-          <label htmlFor="fault-search" className="text-sm font-semibold text-slate-900">
-            Search fault history
+        <div className="border-b border-slate-200 p-4 sm:p-5">
+          <label htmlFor="fault-search" className="text-sm font-medium text-slate-900">
+            Search records
           </label>
-          <p className="mt-1 text-xs text-slate-500">
-            Search across fault reasons and technician descriptions from every machine.
-          </p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <svg
@@ -257,25 +255,25 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
                 type="search"
                 value={filters.q ?? ""}
                 onChange={(event) => setFilters({ ...filters, q: event.target.value })}
-                className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                placeholder="Try “motor overload”, “bearing”, or “jammed conveyor”"
+                className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-11 pr-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                placeholder="Fault reason or description"
               />
             </div>
-            <button className="rounded-xl bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-              Search events
+            <button className="rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800">
+              Search
             </button>
           </div>
         </div>
 
         <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3 xl:grid-cols-5">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label className="text-sm font-medium text-slate-700">
             Machine
             <select
               value={filters.machineId ?? ""}
               onChange={(event) =>
                 setFilters({ ...filters, machineId: event.target.value })
               }
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-slate-900"
+              className={fieldClass}
             >
               <option value="">All machines</option>
               {machines.map((machine) => (
@@ -286,14 +284,14 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
             </select>
           </label>
 
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label className="text-sm font-medium text-slate-700">
             Production line
             <select
               value={filters.productionLineId ?? ""}
               onChange={(event) =>
                 setFilters({ ...filters, productionLineId: event.target.value })
               }
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-slate-900"
+              className={fieldClass}
             >
               <option value="">All lines</option>
               {productionLines.map((line) => (
@@ -304,7 +302,7 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
             </select>
           </label>
 
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label className="text-sm font-medium text-slate-700">
             Status
             <select
               value={filters.status ?? ""}
@@ -314,7 +312,7 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
                   status: event.target.value as DowntimeFilters["status"],
                 })
               }
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-slate-900"
+              className={fieldClass}
             >
               <option value="">Any status</option>
               <option value="OPEN">Open</option>
@@ -322,36 +320,33 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
             </select>
           </label>
 
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label className="text-sm font-medium text-slate-700">
             From
             <input
               type="datetime-local"
               value={filters.start ?? ""}
               onChange={(event) => setFilters({ ...filters, start: event.target.value })}
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-slate-900"
+              className={fieldClass}
             />
           </label>
 
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label className="text-sm font-medium text-slate-700">
             To
             <input
               type="datetime-local"
               value={filters.end ?? ""}
               onChange={(event) => setFilters({ ...filters, end: event.target.value })}
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-slate-900"
+              className={fieldClass}
             />
           </label>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:px-5">
-          <p className="text-xs text-slate-500">
-            Choose any combination, then select <span className="font-semibold">Search events</span>.
-          </p>
+        <div className="flex justify-end border-t border-slate-100 px-4 py-3 sm:px-5">
           <button
             type="button"
             onClick={clearFilters}
             disabled={!hasFilters}
-            className="shrink-0 text-sm font-semibold text-cyan-700 disabled:cursor-not-allowed disabled:text-slate-300"
+            className="text-sm font-medium text-blue-700 disabled:text-slate-300"
           >
             Clear all filters
           </button>
@@ -359,27 +354,25 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
       </form>
 
       {error && (
-        <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+        <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </p>
       )}
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+      <section className="mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <h2 className="font-semibold text-slate-900">Fault history</h2>
             <p className="mt-0.5 text-xs text-slate-500">{loading ? "Searching…" : resultLabel}</p>
           </div>
           {hasFilters && !loading && (
-            <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800">
-              Filtered results
-            </span>
+            <span className="text-xs text-slate-500">Filters applied</span>
           )}
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 text-xs font-medium text-slate-500">
               <tr>
                 <th className="px-5 py-4">Fault details</th>
                 <th className="px-5 py-4">Machine context</th>
@@ -417,26 +410,26 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
                   </td>
                   <td className="px-5 py-5">
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      className={`rounded border px-2 py-0.5 text-xs font-medium ${
                         event.status === "OPEN"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-emerald-100 text-emerald-800"
+                          ? "border-amber-200 bg-amber-50 text-amber-800"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-800"
                       }`}
                     >
-                      {event.status}
+                      {event.status === "OPEN" ? "Open" : "Resolved"}
                     </span>
                   </td>
                   <td className="px-5 py-5 text-right">
                     <button
                       onClick={() => begin(event)}
-                      className="mr-3 font-semibold text-cyan-700 hover:text-cyan-900"
+                      className="mr-3 font-medium text-blue-700 hover:text-blue-900"
                     >
                       Edit
                     </button>
                     {canDelete && (
                       <button
                         onClick={() => void remove(event)}
-                        className="font-semibold text-rose-600 hover:text-rose-800"
+                        className="font-medium text-red-600 hover:text-red-800"
                       >
                         Delete
                       </button>
@@ -457,7 +450,7 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
                 : "Log the first event to begin building maintenance history."}
             </p>
             {hasFilters && (
-              <button onClick={clearFilters} className="mt-4 text-sm font-semibold text-cyan-700">
+              <button onClick={clearFilters} className="mt-4 text-sm font-medium text-blue-700">
                 Reset search
               </button>
             )}
@@ -468,14 +461,14 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
       </section>
 
       {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
           <form
             onSubmit={save}
-            className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+            className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-lg border border-slate-200 bg-white p-6 shadow-xl"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">{editing ? "Edit event" : "Log downtime event"}</h2>
+                <h2 className="text-lg font-semibold text-slate-950">{editing ? "Edit event" : "New downtime event"}</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Keep the event open until the machine is back in service.
                 </p>
@@ -484,26 +477,26 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close event form"
-                className="text-2xl text-slate-400"
+                className="rounded p-1 text-xl leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700"
               >
                 ×
               </button>
             </div>
 
             {error && (
-              <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              <p role="alert" className="mt-5 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
                 {error}
               </p>
             )}
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-medium sm:col-span-2">
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                 Machine
                 <select
                   required
                   value={form.machineId}
                   onChange={(event) => setForm({ ...form, machineId: event.target.value })}
-                  className="mt-2 w-full rounded-xl border border-slate-200 p-3"
+                  className={fieldClass}
                 >
                   <option value="">Select machine</option>
                   {machines.map((machine) => (
@@ -514,29 +507,29 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
                 </select>
               </label>
 
-              <label className="text-sm font-medium sm:col-span-2">
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                 Fault reason
                 <input
                   required
                   value={form.faultReason}
                   onChange={(event) => setForm({ ...form, faultReason: event.target.value })}
-                  className="mt-2 w-full rounded-xl border border-slate-200 p-3"
+                  className={fieldClass}
                   placeholder="e.g. Conveyor motor overload"
                 />
               </label>
 
-              <label className="text-sm font-medium">
+              <label className="text-sm font-medium text-slate-700">
                 Occurred at
                 <input
                   required
                   type="datetime-local"
                   value={form.occurredAt}
                   onChange={(event) => setForm({ ...form, occurredAt: event.target.value })}
-                  className="mt-2 w-full rounded-xl border border-slate-200 p-3"
+                  className={fieldClass}
                 />
               </label>
 
-              <label className="text-sm font-medium">
+              <label className="text-sm font-medium text-slate-700">
                 Event status
                 <select
                   value={form.status}
@@ -547,7 +540,7 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
                       resolvedAt: event.target.value === "OPEN" ? "" : form.resolvedAt,
                     })
                   }
-                  className="mt-2 w-full rounded-xl border border-slate-200 p-3"
+                  className={fieldClass}
                 >
                   <option value="OPEN">Open — still down</option>
                   <option value="RESOLVED">Resolved — back in service</option>
@@ -555,41 +548,41 @@ export function DowntimeManager({ initialMachineId, startNewEvent = false }: { i
               </label>
 
               {form.status === "RESOLVED" && (
-                <label className="text-sm font-medium sm:col-span-2">
+                <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                   Resolved at
                   <input
                     required
                     type="datetime-local"
                     value={form.resolvedAt}
                     onChange={(event) => setForm({ ...form, resolvedAt: event.target.value })}
-                    className="mt-2 w-full rounded-xl border border-slate-200 p-3"
+                    className={fieldClass}
                   />
                 </label>
               )}
 
-              <label className="text-sm font-medium sm:col-span-2">
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                 Description
                 <textarea
                   rows={3}
                   value={form.description}
                   onChange={(event) => setForm({ ...form, description: event.target.value })}
-                  className="mt-2 w-full rounded-xl border border-slate-200 p-3"
+                  className={fieldClass}
                   placeholder="Record symptoms, observations, and repair notes for future reference."
                 />
               </label>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold"
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
                 Cancel
               </button>
               <button
                 disabled={saving}
-                className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
               >
                 {saving ? "Saving…" : "Save event"}
               </button>

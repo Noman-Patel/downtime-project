@@ -21,11 +21,14 @@ const blankForm: UserForm = {
   enabled: true,
 };
 
+const fieldClass =
+  "mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-500";
+
 const formatCreatedAt = (value: string) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
-    ? "Creation date unavailable"
-    : `Added ${new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date)}`;
+    ? "Unavailable"
+    : new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
 };
 
 export function UserManager() {
@@ -110,7 +113,9 @@ export function UserManager() {
 
   const remove = async (selected: AppUser) => {
     if (selected.id === currentUser?.id) return;
-    if (!window.confirm(`Delete ${selected.displayName}'s account? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete ${selected.displayName}'s account? This cannot be undone.`)) {
+      return;
+    }
 
     setError("");
     try {
@@ -124,83 +129,85 @@ export function UserManager() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-700">Access control</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">Users</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Manage who can access plant data and which actions they can perform.
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Users</h1>
+          <p className="mt-1.5 text-sm text-slate-500">
+            Administrators manage plant settings. Technicians manage downtime records.
           </p>
         </div>
         <button
           type="button"
           onClick={() => begin()}
-          className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+          className="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
         >
-          + Add user
+          Add user
         </button>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-900">
-          <p className="font-semibold">Administrators</p>
-          <p className="mt-1 text-xs leading-5 text-cyan-800">Manage users, plant structure, machines, and all downtime records.</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-          <p className="font-semibold">Technicians</p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">View plant data and create, update, resolve, or search downtime events.</p>
-        </div>
-      </div>
-
       {notice && (
-        <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
-          ✓ {notice}
+        <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {notice}
         </div>
       )}
       {error && (
-        <div role="alert" className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div role="alert" className="mt-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <div>
-            <h2 className="font-semibold text-slate-900">Application accounts</h2>
-            <p className="mt-1 text-xs text-slate-500">{loading ? "Loading…" : `${users.length} ${users.length === 1 ? "user" : "users"}`}</p>
-          </div>
+      <section className="mt-7 overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h2 className="font-semibold text-slate-900">Application accounts</h2>
+          <p className="text-xs text-slate-500">
+            {loading ? "Loading…" : `${users.length} ${users.length === 1 ? "user" : "users"}`}
+          </p>
+        </div>
+
+        <div className="hidden grid-cols-[minmax(180px,1.5fr)_1fr_1fr_1fr_auto] gap-4 border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-medium text-slate-500 md:grid">
+          <span>User</span>
+          <span>Username</span>
+          <span>Role</span>
+          <span>Status</span>
+          <span className="text-right">Actions</span>
         </div>
 
         {loading ? (
-          <div className="p-14 text-center text-sm text-slate-500">Loading users…</div>
+          <div className="px-5 py-14 text-center text-sm text-slate-500">Loading users…</div>
         ) : (
           <div className="divide-y divide-slate-100">
             {users.map((listedUser) => {
               const isCurrent = listedUser.id === currentUser?.id;
               return (
-                <article key={listedUser.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <div className="grid size-11 shrink-0 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
-                      {(listedUser.displayName || listedUser.username).slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="truncate font-semibold text-slate-900">{listedUser.displayName}</h3>
-                        {isCurrent && <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[10px] font-bold text-cyan-800">YOU</span>}
-                      </div>
-                      <p className="mt-1 truncate text-xs text-slate-500">@{listedUser.username}</p>
-                      <p className="mt-1 text-[11px] text-slate-400">{formatCreatedAt(listedUser.createdAt)}</p>
-                    </div>
+                <article
+                  key={listedUser.id}
+                  className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(180px,1.5fr)_1fr_1fr_1fr_auto] md:items-center md:gap-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-950">{listedUser.displayName}</p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      Added {formatCreatedAt(listedUser.createdAt)}
+                    </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${listedUser.role === "ADMIN" ? "bg-cyan-100 text-cyan-800" : "bg-slate-100 text-slate-700"}`}>
-                      {listedUser.role}
-                    </span>
-                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${listedUser.enabled ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
-                      {listedUser.enabled ? "ACTIVE" : "DISABLED"}
-                    </span>
-                    <button type="button" onClick={() => begin(listedUser)} className="text-sm font-semibold text-cyan-700">
+                  <p className="text-sm text-slate-600">@{listedUser.username}</p>
+                  <p className="text-sm text-slate-600">
+                    {listedUser.role === "ADMIN" ? "Administrator" : "Technician"}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <span
+                      aria-hidden="true"
+                      className={`size-1.5 rounded-full ${listedUser.enabled ? "bg-emerald-500" : "bg-slate-300"}`}
+                    />
+                    {listedUser.enabled ? "Active" : "Disabled"}
+                    {isCurrent && <span className="text-xs text-slate-400">(you)</span>}
+                  </div>
+                  <div className="flex items-center gap-3 text-sm md:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => begin(listedUser)}
+                      className="font-medium text-blue-700 hover:text-blue-900"
+                    >
                       Edit
                     </button>
                     <button
@@ -208,7 +215,7 @@ export function UserManager() {
                       onClick={() => void remove(listedUser)}
                       disabled={isCurrent}
                       title={isCurrent ? "You cannot delete your current account" : undefined}
-                      className="text-sm font-semibold text-rose-600 disabled:cursor-not-allowed disabled:text-slate-300"
+                      className="font-medium text-red-600 hover:text-red-800 disabled:text-slate-300"
                     >
                       Delete
                     </button>
@@ -216,30 +223,49 @@ export function UserManager() {
                 </article>
               );
             })}
-            {!users.length && (
-              <div className="p-14 text-center text-sm text-slate-500">No user accounts found.</div>
-            )}
+          </div>
+        )}
+
+        {!loading && !users.length && (
+          <div className="px-5 py-14 text-center text-sm text-slate-500">
+            No user accounts found.
           </div>
         )}
       </section>
 
       {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4 backdrop-blur-sm">
-          <form onSubmit={save} className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
+          <form
+            onSubmit={save}
+            className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-lg border border-slate-200 bg-white p-6 shadow-xl"
+          >
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">{editing ? "Edit user" : "Add user"}</h2>
-                <p className="mt-1 text-sm text-slate-500">Assign the minimum access needed for this account.</p>
+                <h2 className="text-lg font-semibold text-slate-950">
+                  {editing ? "Edit user" : "Add user"}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Set the account details and level of access.
+                </p>
               </div>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close user form" className="text-2xl text-slate-400">×</button>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close user form"
+                className="rounded p-1 text-xl leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                ×
+              </button>
             </div>
 
             {error && (
-              <p role="alert" className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>
+              <p role="alert" className="mt-5 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                {error}
+              </p>
             )}
 
             <div className="mt-6 space-y-4">
-              <label className="block text-sm font-medium">
+              <label className="block text-sm font-medium text-slate-700">
                 Username
                 <input
                   required
@@ -249,21 +275,27 @@ export function UserManager() {
                   pattern="[A-Za-z0-9._-]+"
                   value={form.username}
                   onChange={(event) => setForm({ ...form, username: event.target.value })}
-                  className="mt-2 w-full rounded-xl border border-slate-200 p-3 disabled:bg-slate-100 disabled:text-slate-500"
+                  className={fieldClass}
                 />
-                {editing && <span className="mt-1 block text-xs font-normal text-slate-400">Usernames cannot be changed.</span>}
+                {editing && (
+                  <span className="mt-1 block text-xs font-normal text-slate-400">
+                    Usernames cannot be changed.
+                  </span>
+                )}
               </label>
-              <label className="block text-sm font-medium">
+
+              <label className="block text-sm font-medium text-slate-700">
                 Display name
                 <input
                   required
                   maxLength={120}
                   value={form.displayName}
                   onChange={(event) => setForm({ ...form, displayName: event.target.value })}
-                  className="mt-2 w-full rounded-xl border border-slate-200 p-3"
+                  className={fieldClass}
                 />
               </label>
-              <label className="block text-sm font-medium">
+
+              <label className="block text-sm font-medium text-slate-700">
                 {editing ? "New password" : "Password"}
                 <input
                   required={!editing}
@@ -273,33 +305,45 @@ export function UserManager() {
                   maxLength={72}
                   value={form.password}
                   onChange={(event) => setForm({ ...form, password: event.target.value })}
-                  className="mt-2 w-full rounded-xl border border-slate-200 p-3"
-                  placeholder={editing ? "Leave blank to keep current password" : "Enter a temporary password"}
+                  className={fieldClass}
+                  placeholder={editing ? "Leave blank to keep current password" : "At least 8 characters"}
                 />
               </label>
-              <label className="block text-sm font-medium">
+
+              <label className="block text-sm font-medium text-slate-700">
                 Role
                 <select
                   value={form.role}
                   disabled={editing?.id === currentUser?.id}
-                  onChange={(event) => setForm({ ...form, role: event.target.value as UserRole })}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white p-3 disabled:bg-slate-100"
+                  onChange={(event) =>
+                    setForm({ ...form, role: event.target.value as UserRole })
+                  }
+                  className={fieldClass}
                 >
                   <option value="TECHNICIAN">Technician</option>
                   <option value="ADMIN">Administrator</option>
                 </select>
               </label>
+
               {editing && (
-                <label className={`flex items-start gap-3 rounded-xl border p-4 ${editing.id === currentUser?.id ? "border-slate-100 bg-slate-50" : "border-slate-200"}`}>
+                <label
+                  className={`flex items-start gap-3 rounded-md border p-4 ${
+                    editing.id === currentUser?.id
+                      ? "border-slate-200 bg-slate-50"
+                      : "border-slate-300"
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={form.enabled}
                     disabled={editing.id === currentUser?.id}
-                    onChange={(event) => setForm({ ...form, enabled: event.target.checked })}
-                    className="mt-0.5 size-4 accent-cyan-600"
+                    onChange={(event) =>
+                      setForm({ ...form, enabled: event.target.checked })
+                    }
+                    className="mt-0.5 size-4 accent-blue-600"
                   />
                   <span>
-                    <span className="block text-sm font-semibold text-slate-800">Account enabled</span>
+                    <span className="block text-sm font-medium text-slate-800">Account enabled</span>
                     <span className="mt-1 block text-xs leading-5 text-slate-500">
                       Disabled users cannot sign in. Your current account stays enabled.
                     </span>
@@ -308,9 +352,18 @@ export function UserManager() {
               )}
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold">Cancel</button>
-              <button disabled={saving} className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={saving}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
                 {saving ? "Saving…" : editing ? "Save user" : "Create user"}
               </button>
             </div>
