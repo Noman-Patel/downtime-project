@@ -43,10 +43,12 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
     <main className="flex min-h-screen items-center justify-center bg-[#f5f6f8] px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center justify-center gap-3">
-          <div className="grid size-9 place-items-center rounded bg-slate-900 text-sm font-bold text-white">M</div>
+          <div className="rounded-md bg-slate-900 px-3 py-2.5 text-xs font-bold tracking-[0.12em] text-white">
+            MECH
+          </div>
           <div>
-            <p className="text-sm font-bold leading-none tracking-wide text-slate-900">MECH</p>
-            <p className="mt-1 text-xs text-slate-500">Downtime tracking</p>
+            <p className="text-sm font-medium leading-none text-slate-700">Downtime tracking</p>
+            <p className="mt-1 text-xs text-slate-500">Operations workspace</p>
           </div>
         </div>
 

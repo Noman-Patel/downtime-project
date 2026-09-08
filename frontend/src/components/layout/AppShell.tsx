@@ -78,29 +78,33 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-[#f5f6f8] text-slate-900">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="MECH overview">
-            <span className="grid size-8 place-items-center rounded bg-slate-900 text-sm font-bold text-white">M</span>
-            <span>
-              <span className="block text-sm font-bold leading-none tracking-wide">MECH</span>
-              <span className="mt-1 hidden text-[11px] leading-none text-slate-500 sm:block">Downtime tracking</span>
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-5 sm:px-6 lg:px-8">
+          <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="MECH overview">
+            <span className="rounded-md bg-slate-900 px-2.5 py-2 text-xs font-bold tracking-[0.12em] text-white">
+              MECH
             </span>
+            <span className="hidden text-xs text-slate-500 xl:block">Downtime tracking</span>
           </Link>
 
-          <nav className="hidden h-full items-center gap-1 md:flex" aria-label="Primary navigation">
-            {visibleNavigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex h-full items-center border-b-2 px-3 text-sm font-medium transition-colors ${
-                  active(item.href)
-                    ? "border-blue-600 text-slate-950"
-                    : "border-transparent text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav
+            className="min-w-0 flex-1 self-stretch overflow-x-auto"
+            aria-label="Primary navigation"
+          >
+            <div className="flex h-full min-w-max items-center gap-1">
+              {visibleNavigation.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex h-full items-center border-b-2 px-3 text-sm font-medium transition-colors ${
+                    active(item.href)
+                      ? "border-blue-600 text-slate-950"
+                      : "border-transparent text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           </nav>
 
           <div className="ml-auto flex min-w-0 items-center gap-3">
@@ -118,22 +122,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </div>
-
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto border-t border-slate-100 px-3 md:hidden" aria-label="Mobile navigation">
-          {visibleNavigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`shrink-0 border-b-2 px-3 py-3 text-sm font-medium ${
-                active(item.href)
-                  ? "border-blue-600 text-slate-950"
-                  : "border-transparent text-slate-500"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-9 lg:px-8">{children}</main>

@@ -3,10 +3,9 @@ spring:
     name: downtime
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/downtime_app
-    username: noman
-    password: Getsuga
-
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/downtime_app}
+    username: ${DB_USERNAME:noman}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
